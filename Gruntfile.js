@@ -2,7 +2,18 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+
     concat: {
+      options: {
+        // define a string to put between each file in the concatenated output
+        separator: ';'
+      },
+      js: {
+        // the files to concatenate
+        src: ['public/**/*.js', 'lib/*.js', 'app/**/*.js'],
+        // the location of the resulting JS file
+        dest: 'public/dist/concat.js'
+      }
     },
 
     mochaTest: {
@@ -21,12 +32,21 @@ module.exports = function(grunt) {
     },
 
     uglify: {
+      dist: {
+        files: {
+          'public/dist/uglified.min.js': ['public/dist/concat.js']
+        }
+      }
     },
 
     eslint: {
       target: [
-        // Add list of files to lint here
+        'public/**/*.js', 'lib/*.js', 'app/**/*.js', 'server-config.js', 'server.js'
       ]
+    },
+
+    clean: {
+      js: ['public/dist']
     },
 
     cssmin: {
@@ -59,10 +79,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-nodemon');
+  grunt.loadNpmTasks('grunt-git');
 
   grunt.registerTask('server-dev', function (target) {
     grunt.task.run([ 'nodemon', 'watch' ]);
@@ -76,7 +98,8 @@ module.exports = function(grunt) {
     'mochaTest'
   ]);
 
-  grunt.registerTask('build', [
+  grunt.registerTask('build', ['clean', 'eslint', 'mochaTest',
+    'concat', 'uglify'
   ]);
 
   grunt.registerTask('upload', function(n) {
@@ -88,8 +111,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('deploy', [
-    // add your deploy tasks here
+    'build', 'upload'// add your deploy tasks here
   ]);
-
 
 };
