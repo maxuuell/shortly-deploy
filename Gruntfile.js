@@ -10,7 +10,7 @@ module.exports = function(grunt) {
       },
       js: {
         // the files to concatenate
-        src: ['public/**/*.js', 'lib/*.js', 'app/**/*.js'],
+        src: ['public/client/**/*.js'],
         // the location of the resulting JS file
         dest: 'public/dist/concat.js'
       }
@@ -41,7 +41,7 @@ module.exports = function(grunt) {
 
     eslint: {
       target: [
-        'public/**/*.js', 'lib/*.js', 'app/**/*.js', 'server-config.js', 'server.js'
+        'Gruntfile.js', 'public/**/*.js', 'lib/**/*.js', 'app/**/*.js', './*.js', 'spec/**/*.js'
       ]
     },
 
@@ -50,6 +50,14 @@ module.exports = function(grunt) {
     },
 
     cssmin: {
+      options: {
+        keepSpecialComments: 0
+      },
+      dist: {
+        files: {
+          'public/dist/style.min.css': 'public/style.css'
+        }
+      }
     },
 
     watch: {
@@ -71,6 +79,12 @@ module.exports = function(grunt) {
 
     shell: {
       prodServer: {
+        command: 'git push live master',
+        options: {
+          stdout: true,
+          stderr: true,
+          failOnError: true
+        }
       }
     },
   });
@@ -84,7 +98,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-nodemon');
-  grunt.loadNpmTasks('grunt-git');
 
   grunt.registerTask('server-dev', function (target) {
     grunt.task.run([ 'nodemon', 'watch' ]);
@@ -95,23 +108,23 @@ module.exports = function(grunt) {
   ////////////////////////////////////////////////////
 
   grunt.registerTask('test', [
-    'mochaTest'
+    'eslint', 'mochaTest'
   ]);
 
   grunt.registerTask('build', ['clean', 'eslint', 'mochaTest',
-    'concat', 'uglify'
+    'concat', 'uglify', 'cssmin'
   ]);
 
   grunt.registerTask('upload', function(n) {
     if (grunt.option('prod')) {
-      // add your production server task here
+      grunt.task.run([ 'shell:prodServer' ]);
     } else {
       grunt.task.run([ 'server-dev' ]);
     }
   });
 
   grunt.registerTask('deploy', [
-    'build', 'upload'// add your deploy tasks here
+    'build', 'upload'
   ]);
 
 };
